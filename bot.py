@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import logging
 import os
 import random
 from dataclasses import dataclass
@@ -354,6 +355,7 @@ class MusicBot(commands.Bot):
 
 
 bot = MusicBot()
+logging.getLogger("discord.voice_state").setLevel(logging.DEBUG)  # mostra detalhes da conexão de voz nos logs
 
 
 @bot.event
@@ -424,6 +426,30 @@ async def teste(interaction: discord.Interaction):
     )
     vc.play(source)
     await interaction.followup.send("🔔 Tocando um bipe por 4 segundos. Você ouviu?")
+
+
+@bot.tree.command(name="voz", description="Diagnóstico da conexão de voz do bot")
+async def voz(interaction: discord.Interaction):
+    vc = interaction.guild.voice_client
+    if vc is None:
+        await interaction.response.send_message("O bot não está em nenhum canal de voz.", ephemeral=True)
+        return
+    linhas = []
+    try:
+        conn = vc._connection
+        sessao = conn.dave_session
+        linhas.append(f"Conectado: {vc.is_connected()}")
+        linhas.append(f"Latência: {vc.latency * 1000:.0f} ms")
+        linhas.append(f"Modo de criptografia: {getattr(vc, 'mode', '?')}")
+        linhas.append(f"DAVE versão do protocolo: {conn.dave_protocol_version}")
+        linhas.append(f"DAVE sessão existe: {sessao is not None}")
+        linhas.append(f"DAVE sessão pronta: {bool(sessao and sessao.ready)}")
+        linhas.append(f"Pode criptografar: {conn.can_encrypt}")
+        linhas.append(f"Código de privacidade: {getattr(vc, 'voice_privacy_code', None)}")
+        linhas.append(f"Tocando: {vc.is_playing()}")
+    except Exception as exc:
+        linhas.append(f"Erro ao ler diagnóstico: {exc}")
+    await interaction.response.send_message("```\n" + "\n".join(linhas) + "\n```", ephemeral=True)
 
 
 @bot.tree.command(name="pause", description="Pausa a música")
