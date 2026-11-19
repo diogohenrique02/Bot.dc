@@ -409,6 +409,23 @@ async def play(interaction: discord.Interaction, query: str):
         await interaction.followup.send(f"➕ **{len(tracks)}** músicas adicionadas à fila.")
 
 
+@bot.tree.command(name="teste", description="Toca um som de teste (bipe) para checar o áudio")
+async def teste(interaction: discord.Interaction):
+    await interaction.response.defer()
+    vc = await ensure_voice(interaction)
+    if vc is None:
+        return
+    if vc.is_playing() or vc.is_paused():
+        await interaction.followup.send("Já tem algo tocando. Use /stop e tente de novo.")
+        return
+    source = discord.PCMVolumeTransformer(
+        discord.FFmpegPCMAudio("sine=frequency=440:duration=4", before_options="-f lavfi", options="-vn"),
+        volume=0.5,
+    )
+    vc.play(source)
+    await interaction.followup.send("🔔 Tocando um bipe por 4 segundos. Você ouviu?")
+
+
 @bot.tree.command(name="pause", description="Pausa a música")
 async def pause(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
