@@ -53,6 +53,10 @@ if os.path.exists(COOKIES_SRC):
         print("Cookies do YouTube carregados.")
     except Exception as exc:
         print(f"Não consegui carregar os cookies: {exc}")
+else:
+    pasta = os.path.dirname(COOKIES_SRC) or "."
+    conteudo = os.listdir(pasta) if os.path.isdir(pasta) else "pasta inexistente"
+    print(f"Cookies NÃO encontrados em {COOKIES_SRC}. Conteúdo de {pasta}: {conteudo}")
 
 
 @dataclass
